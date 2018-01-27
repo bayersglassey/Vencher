@@ -1,0 +1,9 @@
+name=Test Map
+tileset=data/tileset0.txt
+w=8
+h=4
+data=
+    0 0 0 0 0 0 0 0
+    0 0 0 0 0 0 0 0
+    0 0 0 0 0 0 0 0
+    0 0 0 0 0 0 0 0

@@ -1,0 +1,10 @@
+
+GCC="gcc"
+CWFLAGS="-Wall -Wno-unused-variable -Wno-unused-but-set-variable -Werror"
+CFLAGS="$CWFLAGS -g -std=c99 -D DEBUG -rdynamic $@"
+SRC_FNAMES="src/*.c"
+
+# SDL:
+CFLAGS+=" $(sdl2-config --cflags --libs)"
+
+"$GCC" -o main -I./src $CFLAGS $SRC_FNAMES

@@ -1,0 +1,20 @@
+name=Test Tiles
+len=3
+tile_w=4
+tile_h=4
+tiles=
+    data=
+        0 8 0 8
+        8 0 8 0
+        0 8 0 8
+        8 0 8 0
+    data=
+        0 1 0 2
+        1 9 1 0
+        0 1 0 2
+        2 0 2 A
+    data=
+        1 9 9 1
+        9 9 9 9
+        9 9 9 9
+        1 9 9 1
