@@ -26,9 +26,9 @@ int mainloop(SDL_Renderer *renderer, int n_args, char *args[]){
     while(loop){
         if(refresh){
             refresh = false;
-            RET_IF_SDL_ERR(SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255));
+            RET_IF_SDL_ERR(SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE));
             RET_IF_SDL_ERR(SDL_RenderClear(renderer));
-            RET_IF_NZ(map_render(map, renderer));
+            RET_IF_NZ(map_render(map, 0, 0, renderer));
             SDL_RenderPresent(renderer);
         }
         SDL_PollEvent(&event);
@@ -76,10 +76,13 @@ int main(int n_args, char *args[]){
                 fprintf(stderr, "SDL_CreateRenderer error: %s\n", SDL_GetError());
             }else{
                 e = mainloop(renderer, n_args, args);
+                printf("Destroying renderer\n");
                 SDL_DestroyRenderer(renderer);
             }
+            printf("Destroying window\n");
             SDL_DestroyWindow(window);
         }
+        printf("Quitting SDL\n");
         SDL_Quit();
     }
     fprintf(stderr, "Exiting with code: %i\n", e);

@@ -91,7 +91,7 @@ int parse_intmap(char **fdata, int *data, int w, int h, int base){
                     if(c >= '0' && c <= '9'){
                         digit = c - '0';
                     }else if(c >= 'A' && c <= 'Z'){
-                        digit = c - 'A';
+                        digit = c - 'A' + 10;
                     }else{
                         LOG(); printf("Parse error: expected [.0-9A-Z]\n");
                         return 2;
@@ -101,7 +101,7 @@ int parse_intmap(char **fdata, int *data, int w, int h, int base){
                     (*fdata)++;
                 }
             }
-            if(DEBUG_PARSE >= 1){
+            if(DEBUG_PARSE >= 2){
                 LOG(); printf("Parsed: %i\n", n);
             }
             *data = n;

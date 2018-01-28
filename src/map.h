@@ -105,6 +105,30 @@ int tile_parse(struct tile_t *tile, char **fdata, int tile_w, int tile_h){
     return 0;
 }
 
+int tile_render(struct tile_t *tile, int tile_w, int tile_h, int tile_x, int tile_y, struct pal_t *pal, SDL_Renderer *renderer){
+    SDL_Rect rect;
+    rect.w = TILE_PIXEL_W;
+    rect.h = TILE_PIXEL_H;
+
+    rect.y = tile_y;
+    for(int i = 0; i < tile_h; i++){
+        rect.x = tile_x;
+        for(int j = 0; j < tile_w; j++){
+
+            int color_i = tile->data[i * tile_w + j];
+            if(color_i >= 0){
+                SDL_Color *c = &pal->colors[color_i];
+                RET_IF_SDL_ERR(SDL_SetRenderDrawColor(renderer, c->r, c->g, c->b, SDL_ALPHA_OPAQUE));
+                RET_IF_SDL_ERR(SDL_RenderFillRect(renderer, &rect));
+            }
+
+            rect.x += rect.w;
+        }
+        rect.y += rect.h;
+    }
+    return 0;
+}
+
 
 /***********
  * TILESET *
@@ -267,7 +291,7 @@ struct pal_t *pal_load(const char *fname){
     struct pal_t *pal = pal_create(name, len);
     if(pal == NULL)return NULL;
 
-    int *data = malloc(sizeof(*data) * len);
+    int *data = malloc(sizeof(*data) * len * 3);
     if(data == NULL)return NULL;
     RET_NULL_IF_NZ(parse_intmap(&fdata, data, 3, len, 10));
     for(int i = 0; i < len; i++){
@@ -390,7 +414,34 @@ struct map_t *map_load(const char *fname){
 }
 
 
-int map_render(struct map_t *map, SDL_Renderer *renderer){
+int map_render(struct map_t *map, int map_x, int map_y, SDL_Renderer *renderer){
+    if(DEBUG_RENDER >= 1){
+        LOG(); printf("Rendering map: %p\n", map);
+    }
+
+    struct tileset_t *tileset = map->tileset;
+    struct pal_t *pal = map->pal;
+
+    int w = map->w;
+    int h = map->h;
+    int tile_w = tileset->tile_w;
+    int tile_h = tileset->tile_h;
+
+    int tile_y = map_y;
+    for(int i = 0; i < h; i++){
+        int tile_x = map_x;
+        for(int j = 0; j < w; j++){
+
+            int tile_i = map->data[i * w + j];
+            if(tile_i >= 0){
+                struct tile_t *tile = &tileset->tiles[tile_i];
+                RET_IF_NZ(tile_render(tile, tile_w, tile_h, tile_x, tile_y, pal, renderer));
+            }
+
+            tile_x += tile_w * TILE_PIXEL_W;
+        }
+        tile_y += tile_h * TILE_PIXEL_H;
+    }
     return 0;
 }
 
