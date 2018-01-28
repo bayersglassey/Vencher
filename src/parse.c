@@ -84,6 +84,7 @@ int parse_intmap(char **fdata, int *data, int w, int h, int base){
             if(*(*fdata) == '.'){
                 /* The special character */
                 n = -1;
+                (*fdata)++;
             }else{
                 while(c = *(*fdata), !isspace(c)){
                     int digit = 0;
@@ -100,6 +101,9 @@ int parse_intmap(char **fdata, int *data, int w, int h, int base){
                     (*fdata)++;
                 }
             }
+            if(DEBUG_PARSE >= 1){
+                LOG(); printf("Parsed: %i\n", n);
+            }
             *data = n;
             data++;
 
@@ -108,6 +112,13 @@ int parse_intmap(char **fdata, int *data, int w, int h, int base){
         /* EAT WHITESPACE TO NEWLINE */
         while(c = *(*fdata), c != '\n' && isspace(c)){
             (*fdata)++;
+        }
+
+        /* EAT COMMENT TO NEWLINE */
+        if(c == '#'){
+            while(c = *(*fdata), c != '\n' && c != '\0'){
+                (*fdata)++;
+            }
         }
 
         if(c != '\n'){

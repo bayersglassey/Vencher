@@ -1,5 +1,6 @@
 name=Test Map
 tileset=data/tileset0.txt
+palette=data/palette0.txt
 w=8
 h=4
 data=

@@ -28,7 +28,7 @@ int mainloop(SDL_Renderer *renderer, int n_args, char *args[]){
             refresh = false;
             RET_IF_SDL_ERR(SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255));
             RET_IF_SDL_ERR(SDL_RenderClear(renderer));
-            // RET_IF_NZ(fus_geom_render(code, nametable, renderer, rot));
+            RET_IF_NZ(map_render(map, renderer));
             SDL_RenderPresent(renderer);
         }
         SDL_PollEvent(&event);

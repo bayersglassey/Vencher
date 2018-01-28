@@ -1,0 +1,19 @@
+name=Test Palette
+len=16
+colors=
+      0   0   0  # black
+      0   0 128  # blue
+      0 128   0  # green
+      0 128 128  # cyan
+    128   0   0  # red
+    128   0 128  # purple
+    128 128   0  # yellow
+    128 128 128  # white
+     64  64  64  # bright black
+     64  64 255  # bright blue
+     64 255  64  # bright green
+     64 255 255  # bright cyan
+    255  64  64  # bright red
+    255  64 255  # bright purple
+    255 255  64  # bright yellow
+    255 255 255  # bright white
