@@ -72,46 +72,52 @@ int parse_intmap(char **fdata, int *data, int w, int h, int base){
     char c = '\0';
 
     for(int i = 0; i < h; i++){
-        for(int j = 0; j < w; j++){
+        /* EAT WHITESPACE, INCLUDING EMPTY LINES */
+        while(c = *(*fdata), c != '\0' && isspace(c)){
+            (*fdata)++;
+        }
 
-            /* EAT WHITESPACE */
+        if(c != '#'){
+            for(int j = 0; j < w; j++){
+
+                /* EAT WHITESPACE ON THIS LINE */
+                while(c = *(*fdata), c != '\n' && c != '\0' && isspace(c)){
+                    (*fdata)++;
+                }
+
+                /* PARSE AN INT */
+                int n = 0;
+                if(*(*fdata) == '.'){
+                    /* The special character */
+                    n = -1;
+                    (*fdata)++;
+                }else{
+                    while(c = *(*fdata), !isspace(c)){
+                        int digit = 0;
+                        if(c >= '0' && c <= '9'){
+                            digit = c - '0';
+                        }else if(c >= 'A' && c <= 'Z'){
+                            digit = c - 'A' + 10;
+                        }else{
+                            LOG(); printf("Parse error: expected [.0-9A-Z]\n");
+                            return 2;
+                        }
+                        n *= base;
+                        n += digit;
+                        (*fdata)++;
+                    }
+                }
+                if(DEBUG_PARSE >= 2){
+                    LOG(); printf("Parsed: %i\n", n);
+                }
+                *data = n;
+                data++;
+            }
+
+            /* EAT WHITESPACE TO NEWLINE */
             while(c = *(*fdata), c != '\n' && isspace(c)){
                 (*fdata)++;
             }
-
-            /* PARSE AN INT */
-            int n = 0;
-            if(*(*fdata) == '.'){
-                /* The special character */
-                n = -1;
-                (*fdata)++;
-            }else{
-                while(c = *(*fdata), !isspace(c)){
-                    int digit = 0;
-                    if(c >= '0' && c <= '9'){
-                        digit = c - '0';
-                    }else if(c >= 'A' && c <= 'Z'){
-                        digit = c - 'A' + 10;
-                    }else{
-                        LOG(); printf("Parse error: expected [.0-9A-Z]\n");
-                        return 2;
-                    }
-                    n *= base;
-                    n += digit;
-                    (*fdata)++;
-                }
-            }
-            if(DEBUG_PARSE >= 2){
-                LOG(); printf("Parsed: %i\n", n);
-            }
-            *data = n;
-            data++;
-
-        }
-
-        /* EAT WHITESPACE TO NEWLINE */
-        while(c = *(*fdata), c != '\n' && isspace(c)){
-            (*fdata)++;
         }
 
         /* EAT COMMENT TO NEWLINE */
