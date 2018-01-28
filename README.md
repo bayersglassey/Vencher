@@ -2,7 +2,9 @@
 
 ## What
 
-It's a remake of Adventure, the old Atari 2600 game. (Itself a remake of the original text game, Adventure.)
+It's a remake of Intendure (an old DOS game),
+itself a remake of Adventure (an old Atari 2600 game),
+itself a remake of the original text game, Adventure.
 
 ## Why
 
