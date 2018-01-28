@@ -1,10 +1,2 @@
 name=Player
-tile_w=4
-tile_h=4
-len=1
-tiles=
-    data=
-        7 7 7 7
-        7 7 7 7
-        7 7 7 7
-        7 7 7 7
+tileset=data/tilesets/player.txt

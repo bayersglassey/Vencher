@@ -5,7 +5,9 @@
 
 #include "util.h"
 #include "settings.h"
+#include "world.h"
 #include "map.h"
+#include "sprite.h"
 
 
 int mainloop(SDL_Renderer *renderer, int n_args, char *args[]){
@@ -13,16 +15,17 @@ int mainloop(SDL_Renderer *renderer, int n_args, char *args[]){
 
     struct map_t *map = map_load("data/map0.txt");
     if(map == NULL)return 1;
-    if(true){
-        LOG(); printf("Using map:\n");
-        map_repr(map, 1);
-    }
 
-    struct room_t *room = map_get_room(map, map->entrance_x, map->entrance_y, false);
-    if(true){
-        LOG(); printf("Using room:\n");
-        room_repr(room, 1);
-    }
+    struct world_t *world = world_create(map);
+    if(world == NULL)return 1;
+
+    struct sprite_t *player = sprite_load("data/sprites/player.txt", world->room_x, world->room_y);
+    if(player == NULL)return 1;
+
+    RET_IF_NZ(world_sprites_add(world, player));
+
+    LOG(); printf("Using world:\n");
+    world_repr(world, 1);
 
     int rot = 0;
     bool loop = true;
@@ -35,7 +38,7 @@ int mainloop(SDL_Renderer *renderer, int n_args, char *args[]){
             refresh = false;
             RET_IF_SDL_ERR(SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE));
             RET_IF_SDL_ERR(SDL_RenderClear(renderer));
-            RET_IF_NZ(room_render(room, 0, 0, renderer));
+            RET_IF_NZ(world_render(world, 0, 0, renderer));
             SDL_RenderPresent(renderer);
         }
         SDL_PollEvent(&event);
