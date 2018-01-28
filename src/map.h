@@ -13,6 +13,7 @@
 
 
 struct tile_t {
+    /* tiles are owned by a tileset, which store the width & height */
     int *data;
 };
 
@@ -34,12 +35,12 @@ struct pal_t {
     SDL_Color *colors;
 };
 
-struct map_t {
+struct room_t {
     const char *name;
     struct tileset_t *tileset;
     struct pal_t *pal;
 
-    /* map's data is a 2d array of indices into the tileset */
+    /* room's data is a 2d array of indices into the tileset */
     int w;
     int h;
     int *data;
@@ -312,40 +313,40 @@ struct pal_t *pal_load(const char *fname){
  * MAP *
  *******/
 
-struct map_t *map_create(const char *name, struct tileset_t *tileset, struct pal_t *pal, int w, int h){
+struct room_t *room_create(const char *name, struct tileset_t *tileset, struct pal_t *pal, int w, int h){
     int size = w * h;
-    struct map_t *map = malloc(sizeof(*map));
-    LOG(); printf("Creating map: %p, name=%s, tileset=%p, pal=%p, w=%i, h=%i\n", map, name, tileset, pal, w, h);
-    if(map == NULL)return map;
-    map->name = name;
-    map->tileset = tileset;
-    map->pal = pal;
-    map->w = w;
-    map->h = h;
-    map->data = size == 0? NULL: malloc(sizeof(*map->data) * size);
-    if(size != 0 && map->data == NULL)return NULL;
-    for(int i = 0; i < size; i++)map->data[i] = -1;
-    return map;
+    struct room_t *room = malloc(sizeof(*room));
+    LOG(); printf("Creating room: %p, name=%s, tileset=%p, pal=%p, w=%i, h=%i\n", room, name, tileset, pal, w, h);
+    if(room == NULL)return room;
+    room->name = name;
+    room->tileset = tileset;
+    room->pal = pal;
+    room->w = w;
+    room->h = h;
+    room->data = size == 0? NULL: malloc(sizeof(*room->data) * size);
+    if(size != 0 && room->data == NULL)return NULL;
+    for(int i = 0; i < size; i++)room->data[i] = -1;
+    return room;
 }
 
-void map_repr(struct map_t *map, int depth){
+void room_repr(struct room_t *room, int depth){
     if(DEBUG_REPR >= 1){
-        LOG(); printf("Dumping map: %p\n", map);
+        LOG(); printf("Dumping room: %p\n", room);
     }
-    REPR_FIELD(map, name, "%s", depth)
+    REPR_FIELD(room, name, "%s", depth)
     REPR_FIELD_MULTI(tileset, depth)
-    tileset_repr(map->tileset, depth + 1);
+    tileset_repr(room->tileset, depth + 1);
     REPR_FIELD_MULTI(pal, depth)
-    pal_repr(map->pal, depth + 1);
-    REPR_FIELD(map, w, "%i", depth)
-    REPR_FIELD(map, h, "%i", depth)
+    pal_repr(room->pal, depth + 1);
+    REPR_FIELD(room, w, "%i", depth)
+    REPR_FIELD(room, h, "%i", depth)
     REPR_FIELD_MULTI(data, depth)
-    int w = map->w;
-    int h = map->h;
+    int w = room->w;
+    int h = room->h;
     for(int i = 0; i < h; i++){
         print_tabs(depth + 1);
         for(int j = 0; j < w; j++){
-            int tile_i = map->data[i * w + j];
+            int tile_i = room->data[i * w + j];
             if(tile_i == -1)printf("%3s", ".");
             else printf("%3i", tile_i);
             printf(" ");
@@ -355,8 +356,8 @@ void map_repr(struct map_t *map, int depth){
 }
 
 
-struct map_t *map_load(const char *fname){
-    LOG(); printf("Loading map: fname=%s\n", fname);
+struct room_t *room_load(const char *fname){
+    LOG(); printf("Loading room: fname=%s\n", fname);
     char *fdata = load_file(fname);
     if(fdata == NULL)return NULL;
 
@@ -400,39 +401,39 @@ struct map_t *map_load(const char *fname){
         }
     }
 
-    struct map_t *map = map_create(name, tileset, pal, w, h);
-    if(map == NULL)return NULL;
+    struct room_t *room = room_create(name, tileset, pal, w, h);
+    if(room == NULL)return NULL;
 
-    RET_NULL_IF_NZ(parse_intmap(&fdata, map->data, w, h, 16));
+    RET_NULL_IF_NZ(parse_intmap(&fdata, room->data, w, h, 16));
 
     if(DEBUG_LOAD >= 1){
-        LOG(); printf("Loaded map: %p\n", map);
-        map_repr(map, 1);
+        LOG(); printf("Loaded room: %p\n", room);
+        room_repr(room, 1);
     }
 
-    return map;
+    return room;
 }
 
 
-int map_render(struct map_t *map, int map_x, int map_y, SDL_Renderer *renderer){
+int room_render(struct room_t *room, int room_x, int room_y, SDL_Renderer *renderer){
     if(DEBUG_RENDER >= 1){
-        LOG(); printf("Rendering map: %p\n", map);
+        LOG(); printf("Rendering room: %p\n", room);
     }
 
-    struct tileset_t *tileset = map->tileset;
-    struct pal_t *pal = map->pal;
+    struct tileset_t *tileset = room->tileset;
+    struct pal_t *pal = room->pal;
 
-    int w = map->w;
-    int h = map->h;
+    int w = room->w;
+    int h = room->h;
     int tile_w = tileset->tile_w;
     int tile_h = tileset->tile_h;
 
-    int tile_y = map_y;
+    int tile_y = room_y;
     for(int i = 0; i < h; i++){
-        int tile_x = map_x;
+        int tile_x = room_x;
         for(int j = 0; j < w; j++){
 
-            int tile_i = map->data[i * w + j];
+            int tile_i = room->data[i * w + j];
             if(tile_i >= 0){
                 struct tile_t *tile = &tileset->tiles[tile_i];
                 RET_IF_NZ(tile_render(tile, tile_w, tile_h, tile_x, tile_y, pal, renderer));

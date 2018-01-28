@@ -11,11 +11,11 @@
 int mainloop(SDL_Renderer *renderer, int n_args, char *args[]){
     SDL_Event event;
 
-    struct map_t *map = map_load("data/map0.txt");
-    if(map == NULL)return 1;
+    struct room_t *room = room_load("data/room0.txt");
+    if(room == NULL)return 1;
 
-    LOG(); printf("Loaded map:\n");
-    map_repr(map, 1);
+    LOG(); printf("Loaded room:\n");
+    room_repr(room, 1);
 
     int rot = 0;
     bool loop = true;
@@ -28,7 +28,7 @@ int mainloop(SDL_Renderer *renderer, int n_args, char *args[]){
             refresh = false;
             RET_IF_SDL_ERR(SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE));
             RET_IF_SDL_ERR(SDL_RenderClear(renderer));
-            RET_IF_NZ(map_render(map, 0, 0, renderer));
+            RET_IF_NZ(room_render(room, 0, 0, renderer));
             SDL_RenderPresent(renderer);
         }
         SDL_PollEvent(&event);
