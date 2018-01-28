@@ -1,0 +1,74 @@
+name=Grundle
+tile_w=8
+tile_h=22
+len=3
+tiles=
+    data=
+        . . . . . . . .
+        . . . . . . . .
+        . . . . . A A .
+        . . . . A A A A
+        A A A A . . A A
+        A A A A A A A .
+        . . . . A A A .
+        . . . . . A . .
+        . . . . . A . .
+        . . . A A A A .
+        . . A A A A A A
+        . A A A A A A A
+        A A A . . . A A
+        A A . . . . A A
+        A A . . . . A A
+        A A . . . A A A
+        A A A A A A A A
+        . . A A A A . .
+        . . . . A . . .
+        A . . . A A A A
+        A A A . . . . A
+        . . A A A A A A
+    data=
+        A . . . . . . .
+        . A . . . . . .
+        . . A . . A A .
+        . . . A A A A A
+        . . . . A . A A
+        . . . . A A A .
+        . . . A A A A .
+        . . A . . A . .
+        . A . . . A . .
+        A . . . A A A .
+        . . . A A A A .
+        . . A A A A A A
+        . A A A A A A A
+        . A A A A A A A
+        . A A A A A A A
+        . A A A A A A A
+        . . A A A A A .
+        . . . A A A . .
+        . . . . A . . .
+        A A A A A . . .
+        A . . . . . . .
+        A A . . . . . .
+    data=
+        . . . . . . . .
+        . . . . . . . .
+        . . . . . . . .
+        . . . . . . . .
+        . . . . . . . .
+        . . . . A A . .
+        . . . . A A . .
+        . . . . A A . .
+        . . . . A A A .
+        . . . A A . A A
+        . A A A A A A A
+        A A . . A A A .
+        A . . . . . . .
+        A A A A A A . .
+        A A A A A A A .
+        A A A A A A A .
+        . A A A A A A .
+        . A A A A . . .
+        . . A . . . . .
+        . A A . . . A A
+        . A . . . . . A
+        . A A A A A A A
