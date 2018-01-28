@@ -11,11 +11,18 @@
 int mainloop(SDL_Renderer *renderer, int n_args, char *args[]){
     SDL_Event event;
 
-    struct room_t *room = room_load("data/room0.txt");
-    if(room == NULL)return 1;
+    struct map_t *map = map_load("data/map0.txt");
+    if(map == NULL)return 1;
+    if(true){
+        LOG(); printf("Using map:\n");
+        map_repr(map, 1);
+    }
 
-    LOG(); printf("Loaded room:\n");
-    room_repr(room, 1);
+    struct room_t *room = map_get_room(map, map->entrance_x, map->entrance_y, false);
+    if(true){
+        LOG(); printf("Using room:\n");
+        room_repr(room, 1);
+    }
 
     int rot = 0;
     bool loop = true;
@@ -60,7 +67,7 @@ int main(int n_args, char *args[]){
         e = 1;
         fprintf(stderr, "SDL_Init error: %s\n", SDL_GetError());
     }else{
-        SDL_Window *window = SDL_CreateWindow("ADVENT",
+        SDL_Window *window = SDL_CreateWindow("VENCHER",
             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
             SCW, SCH, SDL_WINDOW_SHOWN);
 

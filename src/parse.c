@@ -1,5 +1,6 @@
 
 #include <stdlib.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -9,12 +10,58 @@
 #include "parse.h"
 
 
+void parse_whitespace(char **fdata, bool eat_comments, bool eat_newlines){
+    char c = '\0';
+    do{
+        /* EAT WHITESPACE */
+        while(c = *(*fdata), c != '\0' && (eat_newlines || c != '\n') && isspace(c)){
+            (*fdata)++;
+        }
+
+        /* EAT COMMENT */
+        if(eat_comments && c == '#'){
+            while(c = *(*fdata), c != '\n' && c != '\0'){
+                (*fdata)++;
+            }
+        }
+    }while(eat_newlines && c == '\n');
+}
+
+int parse_string(char **fdata, char **val, int *val_len){
+    /*
+        The value goes right to the newline: all whitespace and '#'
+        comments will be included in the value!
+        TODO: add support for trailing whitespace & comments?..
+    */
+
+    char c = '\0';
+
+    /* EAT WHITESPACE */
+    parse_whitespace(fdata, true, true);
+
+    /* PARSE STRING TO NEWLINE */
+    *val = *fdata;
+    *val_len = 0;
+    while(c = *(*fdata), c != '\0' && c != '\n'){
+        (*val_len)++;
+        (*fdata)++;
+    }
+    if(c != '\0'){
+        (*fdata)++;
+    }
+
+    return 0;
+}
+
 int parse_item(char **fdata, char **key, int *key_len, char **val, int *val_len){
     /*
         Parses one "item", i.e. key/value pair.
-        The expected data is like this:
-            x=1
-            name=Johnny Q
+        The expected format is:
+            "key=value\n"
+        The key can contain letters, numbers, and underscores.
+        No whitespace is allowed between the key and '='.
+        The value starts immediately after the '=' and goes right to the
+        newline: all whitespace and '#' comments will be included in it!
     */
 
     char c = '\0';
@@ -24,23 +71,27 @@ int parse_item(char **fdata, char **key, int *key_len, char **val, int *val_len)
     *val_len = 0;
 
     /* EAT WHITESPACE */
-    while(c = *(*fdata), isspace(c)){
-        (*fdata)++;
-    }
+    parse_whitespace(fdata, true, true);
 
-    /* PARSE KEY */
+    /* PARSE KEY TO '=' */
     *key = *fdata;
     while(c = *(*fdata), c == '_' || isalpha(c)){
         (*key_len)++;
         (*fdata)++;
     }
-    if(c != '='){
+
+    if(*key_len == 0){
+        /* No key: so we're at end of file. That's fine: we return success.
+        Caller should know that an empty key means end of file. */
+        return 0;
+    }else if(c != '='){
         LOG(); printf("Parse error: expected '='\n");
+        printf("\n----\n%s\n----\n", *fdata);
         return 2;
     }
     (*fdata)++;
 
-    /* PARSE VAL */
+    /* PARSE VAL TO NEWLINE */
     *val = *fdata;
     while(c = *(*fdata), c != '\0' && c != '\n'){
         (*val_len)++;
@@ -71,68 +122,62 @@ int parse_intmap(char **fdata, int *data, int w, int h, int base){
 
     char c = '\0';
 
+    /* EAT WHITESPACE */
+    parse_whitespace(fdata, true, true);
+
     for(int i = 0; i < h; i++){
-        /* EAT WHITESPACE, INCLUDING EMPTY LINES */
-        while(c = *(*fdata), c != '\0' && isspace(c)){
-            (*fdata)++;
-        }
+        for(int j = 0; j < w; j++){
 
-        if(c != '#'){
-            for(int j = 0; j < w; j++){
+            /* EAT WHITESPACE ON THIS LINE */
+            parse_whitespace(fdata, false, false);
 
-                /* EAT WHITESPACE ON THIS LINE */
-                while(c = *(*fdata), c != '\n' && c != '\0' && isspace(c)){
-                    (*fdata)++;
-                }
-
-                /* PARSE AN INT */
-                int n = 0;
-                if(*(*fdata) == '.'){
-                    /* The special character */
-                    n = -1;
-                    (*fdata)++;
-                }else{
-                    while(c = *(*fdata), !isspace(c)){
-                        int digit = 0;
-                        if(c >= '0' && c <= '9'){
-                            digit = c - '0';
-                        }else if(c >= 'A' && c <= 'Z'){
-                            digit = c - 'A' + 10;
-                        }else{
-                            LOG(); printf("Parse error: expected [.0-9A-Z]\n");
-                            return 2;
-                        }
-                        n *= base;
-                        n += digit;
-                        (*fdata)++;
+            /* PARSE AN INT */
+            int n = 0;
+            if(*(*fdata) == '.'){
+                /* The special character */
+                n = -1;
+                (*fdata)++;
+            }else{
+                while(c = *(*fdata), !isspace(c)){
+                    int digit = 0;
+                    if(c >= '0' && c <= '9'){
+                        digit = c - '0';
+                    }else if(c >= 'A' && c <= 'Z'){
+                        digit = c - 'A' + 10;
+                    }else{
+                        LOG(); printf("Parse error: expected [.0-9A-Z]\n");
+                        return 2;
                     }
+                    n *= base;
+                    n += digit;
+                    (*fdata)++;
                 }
-                if(DEBUG_PARSE >= 2){
-                    LOG(); printf("Parsed: %i\n", n);
-                }
-                *data = n;
-                data++;
             }
-
-            /* EAT WHITESPACE TO NEWLINE */
-            while(c = *(*fdata), c != '\n' && isspace(c)){
-                (*fdata)++;
+            if(DEBUG_PARSE >= 2){
+                LOG(); printf("Parsed: %i\n", n);
             }
+            *data = n;
+            data++;
         }
 
-        /* EAT COMMENT TO NEWLINE */
-        if(c == '#'){
-            while(c = *(*fdata), c != '\n' && c != '\0'){
-                (*fdata)++;
-            }
-        }
-
-        if(c != '\n'){
-            LOG(); printf("Parse error: expected newline\n");
-            return 2;
-        }
-        (*fdata)++;
+        /* EAT WHITESPACE */
+        parse_whitespace(fdata, true, true);
     }
 
     return 0;
 }
+
+
+void repr_intmap(int *data, int w, int h, const char *fmt_s, const char *fmt_i, int depth){
+    for(int i = 0; i < h; i++){
+        print_tabs(depth);
+        for(int j = 0; j < w; j++){
+            int data_i = data[i * w + j];
+            if(data_i == -1)printf(fmt_s, ".");
+            else printf(fmt_i, data_i);
+            printf(" ");
+        }
+        printf("\n");
+    }
+}
+

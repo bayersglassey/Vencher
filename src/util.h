@@ -18,6 +18,7 @@ int INT_REM(int a, int b);
 #define RET_IF_SDL_ERR(x) {int e=(x); if(e < 0){ERR_INFO(); fprintf(stderr, "SDL error: %s\n", SDL_GetError()); return 2;}}
 
 #define REPR_FIELD(obj, field, fmt, depth) print_tabs(depth); printf(#field "=" fmt "\n", obj->field);
+#define REPR_FIELD_EXT(obj, field, field_ext, fmt, depth) print_tabs(depth); printf(#field "=" fmt "\n", obj->field_ext);
 #define REPR_FIELD_MULTI(field, depth) print_tabs(depth); printf(#field "=\n");
 
 size_t strnlen(const char *s, size_t maxlen);

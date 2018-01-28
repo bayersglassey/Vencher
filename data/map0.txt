@@ -1,0 +1,15 @@
+name=Test Map
+len=3
+w=3
+h=2
+entrance_x=1
+entrance_y=0
+rooms=
+    # They're all the same file, which is fine.
+    # The file will simply be loaded+parsed multiple times.
+    data/room0.txt
+    data/room0.txt
+    data/room0.txt
+data=
+    . 1 2
+    3 1 .
