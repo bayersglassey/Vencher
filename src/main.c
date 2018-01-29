@@ -19,47 +19,77 @@ int mainloop(SDL_Renderer *renderer, int n_args, char *args[]){
     struct world_t *world = world_create(map);
     if(world == NULL)return 1;
 
-    struct sprite_t *player = sprite_load("data/sprites/player.txt", world->room_x, world->room_y);
+    struct sprite_t *player = sprite_load("data/sprites/player.txt", world->room_x, world->room_y, 0, 0, false);
     if(player == NULL)return 1;
+
+    SDL_Keycode keycodes[KEYS] = {
+        SDLK_UP, SDLK_DOWN, SDLK_LEFT, SDLK_RIGHT,
+        SDLK_SPACE
+    };
+    controller_set_keycodes(&player->controller, keycodes);
 
     RET_IF_NZ(world_sprites_add(world, player));
 
     LOG(); printf("Using world:\n");
     world_repr(world, 1);
 
-    int rot = 0;
     bool loop = true;
-    bool refresh = true;
-    bool keydown_shift = false;
-    int keydown_l = 0;
-    int keydown_r = 0;
     while(loop){
-        if(refresh){
-            refresh = false;
-            RET_IF_SDL_ERR(SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE));
-            RET_IF_SDL_ERR(SDL_RenderClear(renderer));
-            RET_IF_NZ(world_render(world, 0, 0, renderer));
-            SDL_RenderPresent(renderer);
+
+        /* START TIMER */
+        Uint32 last_tick = SDL_GetTicks();
+        Uint32 next_tick = last_tick + 30;
+
+        /* RENDER WORLD */
+        RET_IF_SDL_ERR(SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE));
+        RET_IF_SDL_ERR(SDL_RenderClear(renderer));
+        RET_IF_NZ(world_render(world, 0, 0, renderer));
+        SDL_RenderPresent(renderer);
+
+        /* PREPARE WORLD FOR A NEW TICK */
+        RET_IF_NZ(world_prepare_tick(world));
+
+        /* HANDLE EVENTS */
+        while(SDL_PollEvent(&event)){
+            if(event.type == SDL_QUIT){
+                loop = false;
+            }else if(event.type == SDL_KEYDOWN || event.type == SDL_KEYUP){
+                if(event.key.keysym.sym == SDLK_ESCAPE){
+                    if(event.type == SDL_KEYDOWN){
+                        loop = false;
+                    }
+                }else{
+                    /* UPDATE CONTROLLER KEY STATES */
+                    for(int i = 0; i < world->n_sprites; i++){
+                        struct sprite_t *sprite = world->sprites[i];
+                            if(sprite != NULL){
+                            struct controller_t *controller = &sprite->controller;
+                            for(int j = 0; j < KEYS; j++){
+                                if(controller->keycodes[i] == event.key.keysym.sym){
+                                    if(event.type == SDL_KEYDOWN){
+                                        controller->key_is_down[i] = true;
+                                        controller->key_was_down[i] = true;
+                                    }else if(event.type == SDL_KEYUP){
+                                        controller->key_is_down[i] = false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
-        SDL_PollEvent(&event);
-        switch(event.type){
-            case SDL_KEYDOWN:
-                if(event.key.keysym.sym == SDLK_ESCAPE)loop = false;
-                if(event.key.keysym.sym == SDLK_0){rot = 0; refresh = true;}
-                if(event.key.keysym.sym == SDLK_LEFT && keydown_l == 0)keydown_l = 2;
-                if(event.key.keysym.sym == SDLK_RIGHT && keydown_r == 0)keydown_r = 2;
-                if(event.key.keysym.sym == SDLK_LSHIFT || event.key.keysym.sym == SDLK_RSHIFT)keydown_shift = true;
-                break;
-            case SDL_KEYUP:
-                if(event.key.keysym.sym == SDLK_LEFT)keydown_l = 0;
-                if(event.key.keysym.sym == SDLK_RIGHT)keydown_r = 0;
-                if(event.key.keysym.sym == SDLK_LSHIFT || event.key.keysym.sym == SDLK_RSHIFT)keydown_shift = false;
-                break;
-            case SDL_QUIT: loop = false; break;
-            default: break;
+
+        /* DO WHATEVER A WORLD DOES DURING A TICK */
+        RET_IF_NZ(world_do_tick(world));
+
+        /* DELAY */
+        Uint32 new_tick = SDL_GetTicks();
+        if(new_tick < next_tick){
+            Uint32 wait_ticks = next_tick - new_tick;
+            SDL_Delay(wait_ticks);
         }
-        if(keydown_l >= (keydown_shift? 2: 1)){rot += 1; refresh = true; keydown_l = 1;}
-        if(keydown_r >= (keydown_shift? 2: 1)){rot -= 1; refresh = true; keydown_r = 1;}
+
     }
     return 0;
 }

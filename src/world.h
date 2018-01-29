@@ -105,8 +105,46 @@ int world_render(struct world_t *world, int world_x, int world_y, SDL_Renderer *
         LOG(); printf("Rendering world: %p\n", world);
     }
 
+    struct room_t *room = world->room;
+    struct pal_t *pal = room->pal;
+
     RET_IF_NZ(room_render(world->room, world_x, world_y, renderer));
 
+    for(int i = 0; i < world->n_sprites; i++){
+        struct sprite_t *sprite = world->sprites[i];
+        if(sprite != NULL){
+            RET_IF_NZ(sprite_render(sprite, world_x, world_y, pal, renderer));
+        }
+    }
+
+    return 0;
+}
+
+int world_prepare_tick(struct world_t *world){
+    for(int i = 0; i < world->n_sprites; i++){
+        struct sprite_t *sprite = world->sprites[i];
+        if(sprite != NULL){
+            struct controller_t *controller = &sprite->controller;
+            for(int j = 0; j < KEYS; j++){
+                controller->key_was_down[j] = controller->key_is_down[j];
+            }
+        }
+    }
+    return 0;
+}
+
+int world_do_tick(struct world_t *world){
+    for(int i = 0; i < world->n_sprites; i++){
+        struct sprite_t *sprite = world->sprites[i];
+        if(sprite != NULL){
+            struct controller_t *controller = &sprite->controller;
+            controller_repr(controller, 1);
+            if(controller->key_was_down[KEY_U])sprite->y -= 1;
+            if(controller->key_was_down[KEY_D])sprite->y += 1;
+            if(controller->key_was_down[KEY_L])sprite->x -= 1;
+            if(controller->key_was_down[KEY_R])sprite->x += 1;
+        }
+    }
     return 0;
 }
 
